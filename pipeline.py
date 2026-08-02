@@ -20,16 +20,14 @@ from config import SOURCES
 from database import init_db, insert_article
 from scrapers.static_scraper import StaticScraper
 from ai_summarizer import summarize_article
-# from scrapers.selenium_scraper import SeleniumScraper  # Phase 2
+from scrapers.selenium_scraper import SeleniumScraper
 
 
 def get_scraper_for_source(source_config: dict):
-    """Picks the right scraper class based on the 'type' field in config.py.
-    This is the ONLY place that needs to know both scraper types exist."""
     if source_config["type"] == "static":
         return StaticScraper(source_config)
     elif source_config["type"] == "selenium":
-        raise NotImplementedError("Selenium scraper is Phase 2 — coming next.")
+        return SeleniumScraper(source_config)
     else:
         raise ValueError(f"Unknown source type: {source_config['type']}")
 
