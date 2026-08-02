@@ -29,7 +29,16 @@ import os
 import json
 from groq import Groq
 
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+def get_api_key():
+    """Try Streamlit secrets first (for deployed app), fall back to
+    environment variable (for local development)."""
+    try:
+        import streamlit as st
+        return st.secrets["GROQ_API_KEY"]
+    except Exception:
+        return os.environ.get("GROQ_API_KEY")
+
+client = Groq(api_key=get_api_key())
 
 # These few-shot examples are shown to the model as part of the prompt,
 # so it learns the EXACT shape of output we expect.
