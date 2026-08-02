@@ -7,7 +7,7 @@ selenium==4.27.1
 pandas==2.2.3
 
 # --- AI summarization (Claude API) ---
-anthropic==0.40.0
+groq==0.15.0
 
 # --- Dashboard ---
 streamlit==1.40.2

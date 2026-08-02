@@ -52,29 +52,19 @@ def article_exists(url: str) -> bool:
     return result is not None
 
 
-def insert_article(source: str, title: str, url: str) -> bool:
-    """Inserts a new article. Returns True if inserted, False if it
-    was a duplicate (already existed) or something went wrong.
-
-    We check article_exists() first (cheap, clear, explainable),
-    AND we rely on the UNIQUE constraint on the url column as a
-    safety net (belt-and-suspenders — this matters if the pipeline
-    ever runs two scrapers in parallel and both check at the same time)."""
+def insert_article(source, title, url, summary=None, category=None, sentiment=None):
     if article_exists(url):
         return False
-
     conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT INTO articles (source, title, url) VALUES (?, ?, ?)",
-            (source, title, url),
+            "INSERT INTO articles (source, title, url, summary, category, sentiment) VALUES (?, ?, ?, ?, ?, ?)",
+            (source, title, url, summary, category, sentiment),
         )
         conn.commit()
         return True
     except sqlite3.IntegrityError:
-        # This fires if the UNIQUE constraint catches a duplicate
-        # that slipped past our article_exists() check.
         return False
     finally:
         conn.close()

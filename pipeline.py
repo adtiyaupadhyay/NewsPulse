@@ -19,6 +19,7 @@ high volume" line from the JD, in code form.
 from config import SOURCES
 from database import init_db, insert_article
 from scrapers.static_scraper import StaticScraper
+from ai_summarizer import summarize_article
 # from scrapers.selenium_scraper import SeleniumScraper  # Phase 2
 
 
@@ -34,7 +35,7 @@ def get_scraper_for_source(source_config: dict):
 
 
 def run_pipeline():
-    init_db()  # safe to call every time — it only creates the table if missing
+    init_db()
 
     total_new = 0
     total_duplicate = 0
@@ -48,7 +49,6 @@ def run_pipeline():
             scraper = get_scraper_for_source(source_config)
             articles = scraper.scrape()
         except Exception as e:
-            # We log and continue rather than crashing the whole run.
             print(f"  ⚠️  FAILED to scrape {source_name}: {e}")
             total_failed_sources += 1
             continue
@@ -58,10 +58,20 @@ def run_pipeline():
         new_count = 0
         dup_count = 0
         for article in articles:
+            from database import article_exists
+            if article_exists(article["url"]):
+                dup_count += 1
+                continue
+
+            ai_result = summarize_article(article["title"])
+
             was_inserted = insert_article(
                 source=article["source"],
                 title=article["title"],
                 url=article["url"],
+                summary=ai_result["summary"],
+                category=ai_result["category"],
+                sentiment=ai_result["sentiment"],
             )
             if was_inserted:
                 new_count += 1
